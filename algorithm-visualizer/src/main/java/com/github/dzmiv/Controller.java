@@ -8,15 +8,19 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 
 public class Controller implements Initializable {
 	
 	@FXML
 	private Label errorLabel;
+	@FXML
+	private ToggleButton themeToggle;
 	@FXML
 	private TextField sizeField;
 	@FXML
@@ -39,6 +43,7 @@ public class Controller implements Initializable {
 	@FXML
 	private LineChart<Number,Number> chart;
 	
+	// Chart series for each sorting algorithm
 	private XYChart.Series<Number,Number> bubble = new XYChart.Series<>();
 	private XYChart.Series<Number,Number> insertion = new XYChart.Series<>();
 	private XYChart.Series<Number,Number> quick = new XYChart.Series<>();
@@ -52,15 +57,17 @@ public class Controller implements Initializable {
 		chart.getData().addAll(bubble, insertion, quick);
 		chart.setCreateSymbols(false);
 		
+		//Add series to the chart
 		bubble.getData().add(new XYChart.Data<>(0, 0));
         insertion.getData().add(new XYChart.Data<>(0, 0));
         quick.getData().add(new XYChart.Data<>(0, 0));
-
+                
 	}
 	
 	@FXML
 	private void handleStart(ActionEvent e) {
 		try {
+			// Clear existing data and reinitialize to (0,0)
 	        bubble.getData().clear();
 	        insertion.getData().clear();
 	        quick.getData().clear();
@@ -71,36 +78,66 @@ public class Controller implements Initializable {
 	        executeSort();
 	    } catch (NumberFormatException ex) {}
 	}
-
+	
+	@FXML
+	private void handleToggleTheme(ActionEvent e) {
+		// Checks if dark mode has been selected
+		if(themeToggle.isSelected()) {
+			applyTheme(true);
+		}else {
+			applyTheme(false);
+		}
+	}
+	
+	// Method to replace default to dark theme
+	private void applyTheme(boolean darkMode) {
+		Scene scene = themeToggle.getScene();
+		if(scene == null) return;
+		
+		scene.getStylesheets().clear();
+		
+		if(darkMode) {
+			scene.getStylesheets().add(getClass().getResource("/dark-theme.css").toExternalForm());
+		}else {
+			scene.getStylesheets().add(getClass().getResource("/default.css").toExternalForm());
+		}
+	}
+	
 	public void executeSort() {
-		
-		
 		try {
+			// Parse input from UI
 			int size = Integer.parseInt(sizeField.getText());
 			int max = Integer.parseInt(maxField.getText());
+			int min = Integer.parseInt(minField.getText());
 			
 			if (size >= 200) {
 		        throw new IllegalArgumentException("Size must be less than 200.");
 		    }
+			if(min > max) {
+				errorLabel.setText("Error: Min cannot be greater than Max.");
+				return;
+			}
 			
-			int[] randomArray = generateArray(size,0,max);
+			// Generate Array from user input
+			int[] userArray = generateArray(size,min,max);
 			errorLabel.setText("");
-
-			BubbleSort bubbleSort = new BubbleSort(randomArray.clone(), 1, new Consumer<ChartData>() {
+			
+			// Instantiate Algorithms with callback to update chart
+			BubbleSort bubbleSort = new BubbleSort(userArray.clone(), 1, new Consumer<ChartData>() {
 			    @Override
 			    public void accept(ChartData dataPoint) {
 			        bubble.getData().add(new XYChart.Data<>(dataPoint.getTimeElapsed(), dataPoint.getStepCount()));
 			    }
 			});
 			
-			InsertionSort insertionSort = new InsertionSort(randomArray.clone(), 1, new Consumer<ChartData>() {
+			InsertionSort insertionSort = new InsertionSort(userArray.clone(), 1, new Consumer<ChartData>() {
 			    @Override
 			    public void accept(ChartData dataPoint) {
 			        insertion.getData().add(new XYChart.Data<>(dataPoint.getTimeElapsed(), dataPoint.getStepCount()));
 			    }
 			});
 
-			QuickSort quicksort = new QuickSort(randomArray.clone(), 1, new Consumer<ChartData>() {
+			QuickSort quicksort = new QuickSort(userArray.clone(), 1, new Consumer<ChartData>() {
 			    @Override
 			    public void accept(ChartData dataPoint) {
 			        quick.getData().add(new XYChart.Data<>(dataPoint.getTimeElapsed(), dataPoint.getStepCount()));
@@ -123,6 +160,9 @@ public class Controller implements Initializable {
 			        }
 			    }
 			});
+			
+			// Run each sorting algorithm in a background thread
+			// After each finishes, update UI metrics on the JavaFX Application Thread
 			Thread insertionThread = new Thread(new Runnable() {
 			    @Override
 			    public void run() {
@@ -157,16 +197,16 @@ public class Controller implements Initializable {
 			        }
 			    }
 			});
+			// Mark threads as daemons (allows app closure mid sorting)
 			quickThread.setDaemon(true);
-			quickThread.start();
-			insertionThread.setDaemon(true);
-			insertionThread.start();
 			bubbleThread.setDaemon(true);
+			insertionThread.setDaemon(true);
+			
+			// Start the threads
+			insertionThread.start();
+			quickThread.start();
 			bubbleThread.start();
 			
-			new Thread(bubbleSort).start();
-			new Thread(insertionSort).start();
-			new Thread(quicksort).start();
 		} catch (NumberFormatException e) {
 			errorLabel.setText("Error: Invalid Input.");
 			
@@ -175,6 +215,7 @@ public class Controller implements Initializable {
 		}
 	}
 	
+	// Utility method to generate array
 	public int[] generateArray(int size, int min, int max) {
 		Random rand = new Random();
 		int[] array = new int[size];

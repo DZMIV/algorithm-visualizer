@@ -1,0 +1,51 @@
+.root{
+	-fx-background-color: #1e1e1e;
+}
+
+Text {
+    -fx-font-family: "Segoe UI";
+    -fx-fill: #ffffff;
+}
+
+#xChartTxt,
+#yChartTxt,
+#statsTitleTxt {
+    -fx-font-weight: bold;
+}
+
+#chart {
+    -fx-background-color: #1e1e1e;
+}
+
+.chart-plot-background {
+    -fx-background-color: #2e2e2e;
+}
+
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: #555555;
+}
+
+.button {
+    -fx-background-color: linear-gradient(#3c3c3c, #2a2a2a);
+    -fx-background-radius: 10;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #555555;
+    -fx-border-radius: 10;
+}
+
+.button:hover {
+    -fx-background-color: #444444;
+}
+
+.toggle-button {
+	-fx-background-color: linear-gradient(#3c3c3c, #2a2a2a);
+    -fx-background-radius: 10;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #555555;
+    -fx-border-radius: 10;
+}
+
+.toggle-button:hover {
+	-fx-background-color: #444444;
+}
