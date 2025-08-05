@@ -84,8 +84,10 @@ public class Controller implements Initializable {
 		// Checks if dark mode has been selected
 		if(themeToggle.isSelected()) {
 			applyTheme(true);
+			themeToggle.setText("Dark Mode ON");
 		}else {
 			applyTheme(false);
+			themeToggle.setText("Dark Mode OFF");
 		}
 	}
 	
